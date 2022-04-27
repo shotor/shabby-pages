@@ -4,14 +4,13 @@ on:
   push:
     branches: [dev]
     tags:
-      - '*-*-*'
-  pull_request:
-
+      - '*'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event.release.tag_name }}
 
     steps:
       - name: Debug
@@ -23,6 +22,11 @@ jobs:
       # clone this repo to $GITHUB_WORKSPACE
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Get latest tag
+        id: tag
+        run: |
+          echo "::set-output name={TAG}::{git tag | sort -n | tail -1}"
 
       # run the daily-build script
       - name: Generate the images
@@ -42,3 +46,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: cropped/shabby/*
+          tag_name: ${{steps.tag.outputs.TAG}}
